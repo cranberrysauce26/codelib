@@ -12,7 +12,7 @@ void combine(node a, node b, node& c) {
     c.lo = min(a.lo, b.lo);
     c.gcd = gcd(a.gcd, b.gcd);
     c.q = (a.gcd==c.gcd ? a.q : 0) + (b.gcd==c.gcd ? b.q : 0);
-}   
+}
 
 void build(int u, int l, int r) {
     segt[u].l = l, segt[u].r = r;
