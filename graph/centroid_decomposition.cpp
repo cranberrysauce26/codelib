@@ -7,7 +7,7 @@ and have an Nlog N complexity.
 This is because there are at most log N subtrees that any given node can be part of
 (because the height of the tree is log N).
 
-For example, let's say you want to compute the number of pairs (u, v) 
+For example, let's say you want to compute the number of pairs (u, v)
 such that dist(u, v) = K.
 
 Then go to every node u in the centroid tree.
@@ -18,84 +18,40 @@ Then iterate through each v and look at that subtree.
 Compute a vector of distances and combine them to get the result.
 
 */
-
-
 #include <bits/stdc++.h>
-const int MAXN = 1e5+5;
 using namespace std;
-vector<int> adj[MAXN];
+#define szof(v) ((int)(v).size())
+#define DEBUG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+typedef vector<int> vi;
 
-int N;
-
-// temporary variables
-
-int treesz[MAXN];
-bool computed[MAXN];
-
-// results
-vector<int> centroid_tree[MAXN];
-
-int centroid_parent[MAXN], centroid_root;
-vector<int> centroid_children[MAXN];
-
-// Use this to check if u is in the centroid subtree of v
-
-int dfst=0, centroid_disc[MAXN], centroid_finish[MAXN];
-
-void compute_disc_finish(int u, int p) {
-	centroid_disc[u] = ++dfst;
-	for (int v : centroid_children[u]) compute_disc_finish(v, u);
-	centroid_finish[u] = ++dfst;
-}	
-
-void compute_tree_sizes(int u, int p) {
-	treesz[u] = 1;
-	for (int v : adj[u]) {
-		if (v != p) compute_tree_sizes(v, u);
-	}
-}
-
-int find_centroid(int u, int p, int sz) {
-	for (int v : adj[u]) {
-		if (!computed[v] && v != p) {
-			if (treesz[v] > sz/2) return find_centroid(v, u, sz);
-		}
-	}
-	return u;
-}
-
-void decompose(int u, int p) {
-
-	// compute the sizes of the subtree
-	compute_tree_sizes(u, p);
-
-	// p is the parent of u in the original tree
-	// first we find the centroid 
-
-	int centroid = find_centroid(u, p, treesz[u]);
-	computed[centroid] = true;
-
-	// the parent of centroid is p
-
-	centroid_parent[centroid] = p;
-	centroid_children[p].push_back(centroid);
-
-	for (int v : adj[centroid]) {
-		if (!computed[v]) {
-			decompose(v, u);
-		}
-	}
-
-	if (p < 1) centroid_root = centroid;
-}
-
-int main() {
-	scanf("%d", &N);
-	for (int i = 1; i < N; ++i) {
-		int u, v; scanf("%d%d", &u, &v);
-		adj[u].push_back(v);
-		adj[v].push_back(u);
-	}
-	decompose(1, -1);
-	compute_disc_finish(centroid_root, -1);
+/**
+ * Takes a tree as input and returns the centroid of the tree.
+ * It compute cpar by reference, the parent of each node in the centroid tree.
+ */
+int decompose(const vector<vi> &t, vi &cpar) {
+    vi sz(szof(t), 0);
+	vector<bool> visit(szof(t), false);
+    cpar = vi(szof(t));
+    function<int(int, int)> treesz = [&](int u, int p) {
+        sz[u] = 1;
+        for (int v : t[u])
+            if (v != p && !visit[v]) sz[u] += treesz(v, u);
+        return sz[u];
+    };
+    function<int(int, int, int)> findcentroid = [&](int u, int p, int rootsz) {
+        for (int v : t[u])
+            if (v != p && !visit[v])
+                if (sz[v] > rootsz / 2) return findcentroid(v, u, rootsz);
+        return u;
+    };
+    int dfst = 0;
+    function<int(int, int)> dfs = [&](int u, int p) {
+        int c = findcentroid(u, p, treesz(u, p));
+        visit[c] = true;
+        cpar[c] = p;
+        for (int v : t[c])
+            if (!visit[v]) dfs(v, c);
+        return c;
+    };
+    return dfs(0, -1);
 }

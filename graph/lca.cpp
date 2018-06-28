@@ -1,129 +1,11 @@
-#include <cassert>
-#include <vector>
-const int MAXN = 1e5 + 5, LOG = 21;
-std::vector<int> adj[MAXN];
-
-int n, p[MAXN][LOG], h[MAXN];
-
-/**
- * NOTE: Assumes vertices are 1 indexed!
- * STATUS: Untested but should work
- */
-
-void dfs(int u) {
-    for (int v : adj[u]) {
-        if (v != p[u][0]) {
-            p[v][0] = u;
-            h[v] = h[u] + 1;
-            dfs(v);
-        }
-    }
-}
-
-void init() {
-    for (int k = 1; k < LOG; ++k) {
-        for (int u = 1; u <= n; ++u) {
-            p[u][k] = p[p[u][k - 1]][k - 1];
-        }
-    }
-}
-
-/**
- * Returns the k'th parent of u.
- * Where the parent of u is the first parent,
- * the grandparent is the second, etc.
- *
- * If the k'th parent does not exist, it returns 0.
- */
-int anc(int u, int k) {
-    for (int l = LOG - 1; l >= 0; --l) {
-        if (k & (1 << l)) {
-            u = p[u][l];
-        }
-    }
-    return u;
-}
-
-int lca(int u, int v) {
-    if (h[u] < h[v]) {
-        v = anc(v, h[v] - h[u]);
-    } else if (h[u] > h[v]) {
-        u = anc(u, h[u] - h[v]);
-    }
-    assert(h[u] == h[v]);
-    if (u == v) return u;  // or v
-
-    for (int k = LOG - 1; k >= 0; --k) {
-        if (p[u][k] != p[v][k]) {
-            u = p[u][k];
-            v = p[v][k];
-        }
-    }
-    assert(u != v);
-    assert(p[u][0] == p[v][0]);
-    return p[u][0];  // or p[v][0]
-}
-
-// or
-
-/**
- * Way 2 uses eulerian tours on the tree
- */
-namespace way2 {
-// status: tested
-const int MAX = 1e5 + 5;
-int depth[MAX], par[MAX], enter[MAX], leave[MAX], dfslist[3 * MAX], dfst = 0;
-
-void dfs(int u, int p, int h) {
-    depth[u] = h;
-    par[u] = p;
-    dfslist[++dfst] = u;
-    enter[u] = dfst;
-    for (int v : adj[u]) {
-        if (v != p) {
-            dfs(v, u, h + 1);
-            dfslist[++dfst] = u;
-        }
-    }
-    dfslist[++dfst] = u;
-    leave[u] = dfst;
-}
-
-int lcatree[12 * MAX];
-void lca_build(int u, int tl, int tr) {
-    if (tl == tr) {
-        lcatree[u] = dfslist[tl];
-    } else {
-        int tm = (tl + tr) / 2;
-        lca_build(2 * u, tl, tm);
-        lca_build(2 * u + 1, tm + 1, tr);
-        lcatree[u] = depth[lcatree[2 * u]] < depth[lcatree[2 * u + 1]] ? lcatree[2 * u] : lcatree[2 * u + 1];
-    }
-}
-int lca_query(int u, int tl, int tr, int l, int r) {
-    if (l <= tl && tr <= r) {
-        return lcatree[u];
-    }
-    int tm = (tl + tr) / 2;
-    if (tm + 1 > r) {
-        return lca_query(2 * u, tl, tm, l, r);
-    } else if (tm < l) {
-        return lca_query(2 * u + 1, tm + 1, tr, l, r);
-    } else {
-        int ansl = lca_query(2 * u, tl, tm, l, r);
-        int ansr = lca_query(2 * u + 1, tm + 1, tr, l, r);
-        return depth[ansl] < depth[ansr] ? ansl : ansr;
-    }
-}
-
-int lca(int u, int v) { return lca_query(1, 1, dfst, std::min(enter[u], enter[v]), std::max(enter[u], enter[v])); }
-}  // namespace way2
-
+#include <bits/stdc++.h>
 #define szof(v) ((int)(v).size())
-#include <vector>
-#include <functional>
 using namespace std;
 typedef vector<int> vi;
+
+/**
+ * Status: Locally tested.
+ */
 struct lca_t {
     lca_t() {}
     lca_t(const vector<vi> &t, int root = 0) {
@@ -173,4 +55,69 @@ struct lca_t {
     int lg, n;
     vi depth;
     vector<vi> p;
+};
+
+/**
+ * Status: Untested.
+ */
+struct euler_lca_t {
+    euler_lca_t(const vector<vector<int>> &t, int root = 0) {
+        disc = vi(szof(t), -1);
+        finish = vi(szof(t), -1);
+        depth = vi(szof(t), -1);
+
+        function<void(int, int, int)> dfs = [&](int u, int p, int d) {
+            depth[u] = d;
+            disc[u] = szof(dfslist);
+            dfslist.push_back(u);
+            for (int v : t[u]) {
+                if (v != p) {
+                    dfs(v, u, d + 1);
+                    dfslist.push_back(u);
+                }
+            }
+            finish[u] = szof(dfslist);
+            dfslist.push_back(u);
+        };
+
+        dfs(0, -1, 0);
+
+        segtree = vi(4 * szof(dfslist));
+
+        function<void(int, int, int)> build = [&](int u, int tl, int tr) {
+            if (tl == tr) {
+                segtree[u] = dfslist[tl];
+            } else {
+                int tm = (tl + tr) / 2;
+                build(2 * u, tl, tm);
+                build(2 * u + 1, tm + 1, tr);
+                segtree[u] = depth[segtree[2 * u]] < depth[segtree[2 * u + 1]] ? segtree[2 * u] : segtree[2 * u + 1];
+            }
+        };
+
+        build(1, 0, szof(dfslist) - 1);
+    }
+
+    vi dfslist, disc, finish, depth, segtree;
+
+    int _query(int u, int tl, int tr, int l, int r) {
+        if (l <= tl && tr <= r) {
+            return segtree[u];
+        }
+        int tm = (tl + tr) / 2;
+        if (tm + 1 > r) {
+            return _query(2 * u, tl, tm, l, r);
+        } else if (tm < l) {
+            return _query(2 * u + 1, tm + 1, tr, l, r);
+        } else {
+            int ansl = _query(2 * u, tl, tm, l, r);
+            int ansr = _query(2 * u + 1, tm + 1, tr, l, r);
+            return depth[ansl] < depth[ansr] ? ansl : ansr;
+        }
+    }
+
+    int lca(int u, int v) {
+        if (disc[u] > disc[v]) swap(u, v);
+        return _query(1, 0, szof(dfslist)-1, disc[u], disc[v]);
+    }
 };
