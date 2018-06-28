@@ -1,3 +1,4 @@
+#pragma GCC optimize("O3")
 #include <cstdio>
 
 #define getchar() (*_pbuf ? *_pbuf++ : (_buf[fread_unlocked(_pbuf = _buf, 1, 1048576, stdin)] = 0, *_pbuf++))

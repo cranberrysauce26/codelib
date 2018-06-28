@@ -135,6 +135,28 @@ ll chinese2_not_coprime(ll a1, ll m1, ll a2, ll m2) {
 	}
 }
 
+/**
+ * Returns whether the fraction p/q is representable with a finite
+ * number of digits after the decimal point in base b (i.e., no cycles after the decimal)
+ * See http://codeforces.com/contest/983/problem/A
+ * 
+ * Algorithm:
+ * It is finite if and only if the set of primes dividing q (after simplification with p)
+ * is a subset of the set of primes dividing b.
+ */
+bool is_fraction_finite(ll p, ll q, ll b) {
+    p %= q;
+    ll d = gcd(p, q);
+    p /= d;
+    q /= d;
+    d = gcd(q, b);
+    while (d != 1) {
+        q /= d;
+        d = gcd(q, d);
+    }
+    return q==1;
+}
+
 int main() {
 	int a, b;
 	scanf("%d %d", &a, &b);
