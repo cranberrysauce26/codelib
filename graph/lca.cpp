@@ -4,11 +4,11 @@ using namespace std;
 typedef vector<int> vi;
 
 /**
- * Status: Locally tested.
+ * Status: Tested.
  */
-struct lca_t {
-    lca_t() {}
-    lca_t(const vector<vi> &t, int root = 0) {
+struct tree_sparse_table {
+    tree_sparse_table() {}
+    tree_sparse_table(const vector<vi> &t, int root = 0) {
         lg = 0;
         n = szof(t);
         while (1 << lg <= szof(t)) ++lg;
@@ -25,7 +25,8 @@ struct lca_t {
         };
         dfs(root);
         for (int k = 1; k < lg; ++k)
-            for (int u = 0; u < n; ++u) p[k][u] = p[k - 1][u] == -1 ? -1 : p[k - 1][p[k - 1][u]];
+            for (int u = 0; u < n; ++u)
+                p[k][u] = p[k - 1][u] == -1 ? -1 : p[k - 1][p[k - 1][u]];
     }
 
     int anc(int u, int d) const {
@@ -58,10 +59,83 @@ struct lca_t {
 };
 
 /**
+ * Status: Tested.
+ * This is the basic lca above extended to weighted trees.
+ * And by extended I mean basically 10 extra lines (everything can be easily
+ * accomplished by keeping track of the weight from u to the root seperately).
+ * Anyways, it allows for queries for the weighted distance between u and v via
+ * dist(u, v). T is the weight type. For example, long long.
+ */
+template <typename T>
+struct weighted_tree_sparse_table {
+    using edge_t = pair<T, int>;
+    weighted_tree_sparse_table() {}
+    weighted_tree_sparse_table(const vector<vector<edge_t>> &t, int root = 0) {
+        lg = 0;
+        n = szof(t);
+        while (1 << lg <= n) ++lg;
+        p = vector<vi>(lg, vi(n, -1));
+        depth = vi(n, 0);
+        height = vector<T>(n, 0);
+        function<void(int)> dfs = [&](int u) {
+            for (ii e : t[u]) {
+                int v = e.second;
+                if (v != p[0][u]) {
+                    p[0][v] = u;
+                    depth[v] = 1 + depth[u];
+                    height[v] = e.first + height[u];
+                    dfs(v);
+                }
+            }
+        };
+        dfs(root);
+        for (int k = 1; k < lg; ++k) {
+            for (int u = 0; u < n; ++u) {
+                p[k][u] = p[k - 1][u] == -1 ? -1 : p[k - 1][p[k - 1][u]];
+            }
+        }
+    }
+
+    int anc(int u, int d) const {
+        for (int k = lg - 1; k >= 0; --k)
+            if (d & (1 << k)) u = (u == -1) ? -1 : p[k][u];
+        return u;
+    }
+
+    int lca(int u, int v) const {
+        if (depth[u] > depth[v])
+            u = anc(u, depth[u] - depth[v]);
+        else if (depth[v] > depth[u])
+            v = anc(v, depth[v] - depth[u]);
+        assert(depth[u] == depth[v]);
+        if (u == v) return u;
+        for (int k = lg - 1; k >= 0; --k)
+            if (p[k][u] != p[k][v]) u = p[k][u], v = p[k][v];
+        assert(p[0][u] == p[0][v] && u != v);
+        return p[0][u];
+    }
+
+    int unweighted_dist(int u, int v) const {
+        int w = lca(u, v);
+        return depth[u] + depth[v] - 2 * depth[w];
+    }
+
+    T dist(int u, int v) const {
+        int w = lca(u, v);
+        return height[u] + height[v] - 2 * height[w];
+    }
+
+    int lg, n;
+    vi depth;
+    vector<T> height;
+    vector<vi> p;
+};
+
+/**
  * Status: Untested.
  */
-struct euler_lca_t {
-    euler_lca_t(const vector<vector<int>> &t, int root = 0) {
+struct euler_lca {
+    euler_lca(const vector<vector<int>> &t, int root = 0) {
         disc = vi(szof(t), -1);
         finish = vi(szof(t), -1);
         depth = vi(szof(t), -1);
@@ -91,7 +165,9 @@ struct euler_lca_t {
                 int tm = (tl + tr) / 2;
                 build(2 * u, tl, tm);
                 build(2 * u + 1, tm + 1, tr);
-                segtree[u] = depth[segtree[2 * u]] < depth[segtree[2 * u + 1]] ? segtree[2 * u] : segtree[2 * u + 1];
+                segtree[u] = depth[segtree[2 * u]] < depth[segtree[2 * u + 1]]
+                                 ? segtree[2 * u]
+                                 : segtree[2 * u + 1];
             }
         };
 
@@ -116,8 +192,8 @@ struct euler_lca_t {
         }
     }
 
-    int lca(int u, int v) {
+    int operator()(int u, int v) {
         if (disc[u] > disc[v]) swap(u, v);
-        return _query(1, 0, szof(dfslist)-1, disc[u], disc[v]);
+        return _query(1, 0, szof(dfslist) - 1, disc[u], disc[v]);
     }
 };
