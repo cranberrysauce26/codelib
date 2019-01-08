@@ -7,7 +7,6 @@ typedef vector<int> vi;
  * Status: Tested.
  */
 struct tree_sparse_table {
-    tree_sparse_table() {}
     tree_sparse_table(const vector<vi> &t, int root = 0) {
         lg = 0;
         n = szof(t);
@@ -69,7 +68,6 @@ struct tree_sparse_table {
 template <typename T>
 struct weighted_tree_sparse_table {
     using edge_t = pair<T, int>;
-    weighted_tree_sparse_table() {}
     weighted_tree_sparse_table(const vector<vector<edge_t>> &t, int root = 0) {
         lg = 0;
         n = szof(t);
@@ -192,7 +190,7 @@ struct euler_lca {
         }
     }
 
-    int operator()(int u, int v) {
+    int lca(int u, int v) {
         if (disc[u] > disc[v]) swap(u, v);
         return _query(1, 0, szof(dfslist) - 1, disc[u], disc[v]);
     }

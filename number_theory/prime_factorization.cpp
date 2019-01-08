@@ -1,6 +1,4 @@
-#include <bitset>
-#include <cstdio>
-#include <vector>
+#include <bits/stdc++.h>
 using namespace std;
 typedef pair<int, int> ii;
 typedef long long ll;
@@ -62,7 +60,7 @@ void sieve() {
     }
 }
 
-void factorize(ll k, vector<ll> &primes) {
+void factorize(ll k, vector<ll>& primes) {
     for (ll p : allprimes) {
         if (p * p > k) {
             break;
@@ -81,41 +79,61 @@ void factorize(ll k, vector<ll> &primes) {
 
 }  // namespace way2
 
-namespace way3 {
-/**
- * For prime factorizing numbers up to 10^7 in log N
- */
-const int MAX_NUM = (int)1e7;
-int sp[MAX_NUM];
-void sieve() {
-    for (int i = 2; i < MAX_NUM; ++i) {
-        sp[i] = i;
-    }
-    for (int i = 2; i * i < MAX_NUM; ++i) {
-        if (sp[i] == i) {
-            for (int j = i * i; j < MAX_NUM; j += i) {
-                sp[j] = i;
+// Factorizes in log(n)
+// for numbers up to 10^7
+// Status: Tested
+struct small_factorizer {
+    int high;
+    vector<int> sp;
+    small_factorizer(int high)
+        : high(high) {
+        sp = vector<int>(high + 1, -1);
+        for (int i = 2; i <= high; ++i) sp[i] = i;
+        for (int i = 2; i * i <= high; ++i) {
+            if (sp[i] == i) {
+                for (int j = i * i; j <= high; j += i) {
+                    if (sp[j] == j) sp[j] = i;
+                }
             }
         }
     }
-}
+    vector<ii> factorize(int n) {
+        assert(n > 0 && n <= high);
+        vector<ii> f;
+        while (sp[n] != -1) {
+            int p = sp[n];
+            f.push_back({p, 0});
+            while (sp[n] == p) {
+                ++f.back().second;
+                n /= p;
+            }
+        }
+        return f;
+    }
+};
 
-vector<ii> factorize(int n) {
-    vector<ii> f;
-    while (n != 1) {
-        f.push_back({sp[n], 0});
-        while (n % sp[n] == 0) {
-            ++f.back().second;
+// Status: Tested
+vector<int> all_factors(const vector<ii>& pf) {
+    vector<int> ans = {1}, newf;
+    for (int i = 0; i < pf.size(); ++i) {
+        int p = pf[i].first, e = pf[i].second;
+        newf.clear();
+        for (int old : ans) {
+            for (int j = 1, x = p; j <= e; ++j, x *= p) {
+                newf.push_back(old * x);
+            }
+        }
+        for (int f : newf) {
+            ans.push_back(f);
         }
     }
-	return f;
+    return ans;
 }
-}  // namespace way3
 
 int main() {
-    auto ans = way1::factorize(215);
-    for (auto x : ans) {
-        printf("%d^%d ", x.first, x.second);
-    }
-    printf("\n");
+    // auto ans = way1::factorize(215);
+    // for (auto x : ans) {
+    //     printf("%d^%d ", x.first, x.second);
+    // }
+    // printf("\n");
 }
