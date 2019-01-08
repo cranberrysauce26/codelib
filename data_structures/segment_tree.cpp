@@ -27,11 +27,11 @@ struct segtree {
     }
 
     // Returns the answer for [l, r]
-    int query(int l, int r) {
+    T query(int l, int r) {
         return query(1, 0, a.size() - 1, l, r);
     }
 
-    int query(int u, int tl, int tr, int l, int r) {
+    T query(int u, int tl, int tr, int l, int r) {
         if (l <= tl && tr <= r) {
             return t[u];
         }
