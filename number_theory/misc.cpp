@@ -9,6 +9,20 @@ inline void clampmod(ll &a, ll mod = MOD) {
     if (a < 0) a += mod;
 }
 
+// Calculates x^e where x >= 0 and e >= 0 and returns -1 if it overflows
+// Status: Semi tested
+ll smartpow(ll x, ll e) {
+    assert(x >= 0 && e >= 0);
+    if (e == 0) return 1LL;
+    ll h = smartpow(x, e / 2);
+    if (h == -1) return -1;
+    if (h > 3037000499LL) return -1;
+    ll y = h * h;
+    if (e % 2 == 0) return y;
+    if (y > 9223372036854775807LL / x) return -1;
+    return y * x;
+}
+
 // calculates (a*b) modulo mod safely
 ll mulmod(ll a, ll b, ll mod = MOD) {
     clampmod(a, mod);
@@ -37,7 +51,9 @@ ll powmod(ll x, ll e, ll mod = MOD) {
     }
 }
 
-ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
+ll gcd(ll a, ll b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
 
 // returns the inverse of a mod m or -1 if it doesn't exist
 // the code is tested
