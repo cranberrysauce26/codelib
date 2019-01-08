@@ -1,4 +1,5 @@
 #define LOCAL
+#define CPP_IO
 
 #pragma region
 
@@ -22,13 +23,27 @@ ostream& operator<<(ostream& os, vector<T> v) {
 }
 
 template <typename T, typename V>
+ostream& operator<<(ostream& os, set<T, V> v) {
+    os << "{ ";
+    for (auto e : v) os << e << " ";
+    return os << "}";
+}
+
+template <typename T, typename V, typename S>
+ostream& operator<<(ostream& os, map<T, V, S> v) {
+    os << "{ ";
+    for (auto e : v) os << e << " ";
+    return os << "}";
+}
+
+template <typename T, typename V>
 ostream& operator<<(ostream& os, pair<T, V> x) {
-    return os << "{ " << x.first << ", " << x.second << " }";
+    return os << "( " << x.first << ", " << x.second << " )";
 }
 
 template <typename T>
 istream& operator>>(istream& is, vector<T>& v) {
-    for (int i = 0; i < v.size(); ++i) is >> v[i];
+    for (auto& e : v) is >> e;
     return is;
 }
 
@@ -42,9 +57,12 @@ void solve();
 int main() {
 #ifdef LOCAL
     freopen("data.txt", "r", stdin);
-#endif
+#else
+#ifdef CPP_IO
     ios_base::sync_with_stdio(0);
     cin.tie(0);
+#endif
+#endif
     solve();
 }
 
