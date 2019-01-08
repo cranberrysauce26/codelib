@@ -9,10 +9,10 @@ namespace way1 {
  * Simple O(sqrt(n)) factorization no preprocessing
  * use for relatively small n
  */
-
-vector<ii> factorize(int n) {
-    vector<ii> ans;
-    for (int f = 2; f * f <= n; ++f) {
+template <typename T>
+vector<pair<T, int>> factorize(T n) {
+    vector<pair<T, int>> ans;
+    for (T f = 2; f * f <= n; ++f) {
         int e = 0;
         while (n % f == 0) {
             n /= f;
