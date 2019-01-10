@@ -9,6 +9,12 @@ struct segtree {
         return a + b;
     }
 
+    segtree(int n) {
+        a = std::vector<T>(n);
+        t = std::vector<T>(4 * a.size());
+        build(1, 0, a.size() - 1);
+    }
+
     segtree(std::vector<T> a)
         : a(a) {
         t = std::vector<T>(4 * a.size());
