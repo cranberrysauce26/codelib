@@ -45,6 +45,7 @@ long long discrete_root(long long a, long long b, long long g, long long p) {
     if (a == 0) return b == 1 ? -2 : -1;
     b = discrete_logarithm(b, g, p);
     long long logx = linear_modulo_diophantine(a, b, p - 1);
+    if (logx == -1) return -1;
     return powmod(g, logx, p);
 }
 
