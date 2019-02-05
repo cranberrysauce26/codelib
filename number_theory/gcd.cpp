@@ -4,6 +4,7 @@ long long gcd(long long a, long long b) {
     return b == 0 ? a : gcd(b, a % b);
 }
 
+// Status: Tested
 // Returns gcd and computes x and y by reference so that ax + by = gcd(a, b)
 long long egcd(long long a, long long b, long long& x, long long& y) {
     if (a == 0) {

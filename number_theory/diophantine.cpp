@@ -4,6 +4,7 @@
 #include <cassert>
 #include "gcd.cpp"
 
+// Status: Tested
 // Returns unique x such that ax = 1 mod m, or -1 if no x exists
 long long inverse(long long a, long long m) {
     long long x, y;
