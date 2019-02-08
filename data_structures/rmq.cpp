@@ -1,20 +1,22 @@
 #include <bits/stdc++.h>
+using namespace std;
 
 /**
  * Simple min/max segment tree with support for point updates
- *
  */
 template <typename T>
 class RMQ {
    public:
+    RMQ() {
+    }
     // Constructs the segment tree using bidirectional iterators [begin, end)
-    template <class InputIterator>
+    template <typename InputIterator>
     RMQ(InputIterator begin, InputIterator end) {
         n = end - begin;
         assert(n > 0);
-        mn = std::vector<std::pair<T, int>>(4 * n);
-        mx = std::vector<std::pair<T, int>>(4 * n);
-        std::function<void(int, int, int)> build = [&](int u, int tl, int tr) {
+        mn = vector<pair<T, int>>(4 * n);
+        mx = vector<pair<T, int>>(4 * n);
+        function<void(int, int, int)> build = [&](int u, int tl, int tr) {
             if (tl == tr) {
                 mn[u] = {*(begin + tl), tl};
                 mx[u] = {*(begin + tl), tr};
@@ -22,94 +24,58 @@ class RMQ {
                 int tm = (tl + tr) / 2;
                 build(2 * u, tl, tm);
                 build(2 * u + 1, tm + 1, tr);
-                mn[u] = std::min(mn[2 * u], mn[2 * u + 1]);
-                mx[u] = std::max(mx[2 * u], mx[2 * u + 1]);
-            }
-        };
-        build(1, 0, n - 1);
-    }
-    RMQ(int nn) {
-        n = nn;
-        std::function<void(int, int, int)> build = [&](int u, int tl, int tr) {
-            if (tl == tr) {
-                mn[u].second = tl;
-                mx[u].second = tr;
-            } else {
-                int tm = (tl + tr) / 2;
-                build(2 * u, tl, tm);
-                build(2 * u + 1, tm + 1, tr);
-                mn[u] = std::min(mn[2 * u], mn[2 * u + 1]);
-                mx[u] = std::max(mx[2 * u], mx[2 * u + 1]);
+                mn[u] = min(mn[2 * u], mn[2 * u + 1]);
+                mx[u] = max(mx[2 * u], mx[2 * u + 1]);
             }
         };
         build(1, 0, n - 1);
     }
     // Returns the maximum in the range [l, r], 0-indexed as a (value, index)
     // pair. Ties are breaken by using the maximum index.
-    std::pair<T, int> query_max(int l, int r) const {
+    pair<T, int> query_max(int l, int r) const {
         assert(0 <= l && l <= r && r < n);
-        return _querymx(1, 0, n - 1, l, r);
+        return query(1, 0, n - 1, l, r, 1);
     }
     // Returns the minimum in the range [l, r], 0-indexed as a (value, index)
     // pair. Ties are breaken by using the minimum index.
-    std::pair<T, int> query_min(int l, int r) const {
+    pair<T, int> query_min(int l, int r) const {
         assert(0 <= l && l <= r && r < n);
-        return _querymn(1, 0, n - 1, l, r);
+        return query(1, 0, n - 1, l, r, 0);
     }
     // Sets the value at index i to v
     void update(int i, T v) {
         assert(0 <= i && i < n);
-        _update(1, 0, n - 1, i, v);
+        update(1, 0, n - 1, i, v);
     }
 
    private:
     int n;
-    std::vector<std::pair<T, int>> mn, mx;
-
-    std::pair<T, int> _querymx(int u, int tl, int tr, int l, int r) const {
-        if (tl > r || tr < l) {
-            return {std::numeric_limits<T>::lowest(), -1};
-        } else if (l <= tl && tr <= r) {
-            return mx[u];
-        } else {
-            int tm = (tl + tr) / 2;
-            auto lft = _querymx(2 * u, tl, tm, l, r);
-            auto rt = _querymx(2 * u + 1, tm + 1, tr, l, r);
-            return std::max(lft, rt);
-        }
+    vector<pair<T, int>> mn, mx;
+    pair<T, int> query(int u, int tl, int tr, int l, int r, int t) const {
+        if (l <= tl && tr <= r) return t ? mx[u] : mn[u];
+        int tm = (tl + tr) / 2;
+        if (r <= tm)
+            return query(2 * u, tl, tm, l, r, t);
+        else if (tm < l)
+            return query(2 * u + 1, tm + 1, tr, l, r, t);
+        auto a = query(2 * u, tl, tm, l, r, t), b = query(2 * u + 1, tm + 1, tr, l, r, t);
+        return t ? max(a, b) : min(a, b);
     }
-
-    std::pair<T, int> _querymn(int u, int tl, int tr, int l, int r) const {
-        if (tl > r || tr < l) {
-            return {std::numeric_limits<T>::max(), -1};
-        } else if (l <= tl && tr <= r) {
-            return mn[u];
-        } else {
-            int tm = (tl + tr) / 2;
-            auto lft = _querymn(2 * u, tl, tm, l, r);
-            auto rt = _querymn(2 * u + 1, tm + 1, tr, l, r);
-            return std::min(lft, rt);
-        }
-    }
-
-    void _update(int u, int tl, int tr, int i, T v) {
+    void update(int u, int tl, int tr, int i, T v) {
         if (tl == tr) {
             mn[u] = {v, tl};
             mx[u] = {v, tl};
         } else {
             int tm = (tl + tr) / 2;
-            if (i <= tm) {
-                _update(2 * u, tl, tm, i, v);
-            } else {
-                _update(2 * u + 1, tm + 1, tr, i, v);
-            }
-            mn[u] = std::min(mn[2 * u], mn[2 * u + 1]);
-            mx[u] = std::max(mx[2 * u], mx[2 * u + 1]);
+            if (i <= tm)
+                update(2 * u, tl, tm, i, v);
+            else
+                update(2 * u + 1, tm + 1, tr, i, v);
+            mn[u] = min(mn[2 * u], mn[2 * u + 1]);
+            mx[u] = max(mx[2 * u], mx[2 * u + 1]);
         }
     }
 };
-
-using namespace std;
 
 int main() {
     srand(time(NULL));
