@@ -5,6 +5,7 @@
 #include "gcd.cpp"
 #include "powmod.cpp"
 
+// Status: Tested
 // Computes the unique x such that g^x % mod == h where g must be a primitive root of mod
 // Complexity: O(sqrt(mod))
 long long discrete_logarithm(long long h, long long g, const long long mod) {
@@ -38,6 +39,7 @@ long long discrete_logarithm_base(long long a, long long b, long long g, long lo
     return linear_modulo_diophantine(a, b, p - 1);
 }
 
+// Status: Tested
 // Returns not necessarily unique x such that x^a = b modulo p
 long long discrete_root(long long a, long long b, long long g, long long p) {
     a %= p;
