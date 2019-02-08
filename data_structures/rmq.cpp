@@ -63,8 +63,7 @@ class RMQ {
     }
     void update(int u, int tl, int tr, int i, T v) {
         if (tl == tr) {
-            mn[u] = {v, tl};
-            mx[u] = {v, tl};
+            mn[u] = mx[u] = {v, tl};
         } else {
             int tm = (tl + tr) / 2;
             if (i <= tm)
