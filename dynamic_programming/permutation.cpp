@@ -11,6 +11,7 @@ using namespace std;
  */
 int count_permutations(string s, const int mod = 1e9 + 7) {
     int n = s.size() + 1;
+    // dp[i][j] is the number of permutations of {0, 1, ..., i-1} that end at j and satisfy the order
     auto dp = vector<vector<int>>(2);
     dp[0] = {1};
     for (int i = 1; i < n; ++i) {
