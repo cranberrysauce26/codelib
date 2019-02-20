@@ -33,33 +33,68 @@ struct min_query_add_update_node {
 };
 
 /**
- * Status: Untested
+ * Status: Tested
+ * Supports adding x to [l, r] and querying maximum in [l, r]
+ */
+template <typename U>
+struct max_query_add_update_node {
+    U lazy, mx;
+    max_query_add_update_node()
+        : lazy(0), mx(0) {
+    }
+    max_query_add_update_node(U x)
+        : lazy(0), mx(x) {
+    }
+    max_query_add_update_node(max_query_add_update_node a, max_query_add_update_node b)
+        : mx(max(a.mx, b.mx)), lazy(0) {
+    }
+    bool islazy() const {
+        return lazy != 0;
+    }
+    void apply(U x) {
+        mx += x;
+        lazy += x;
+    }
+    void update_child(max_query_add_update_node& u) const {
+        u.apply(lazy);
+    }
+    void unlazy() {
+        lazy = 0;
+    }
+};
+
+/**
+ * Status: Tested
+ * 
+ * Important: Replace 1e16 with your value of INFINITY. Be careful that it does not
+ * overflow with subsequent operations.
+ * 
  * Supports setting each a[i] to min(a[i], v) in [l, r] and querying minimum in [l, r]
  */
 template <typename U>
 struct min_query_min_update_node {
     U lazy, mn;
     min_query_min_update_node()
-        : lazy(0), mn(0) {
+        : lazy(1e16), mn(1e16) {
     }
     min_query_min_update_node(U x)
-        : lazy(0), mn(x) {
+        : lazy(1e16), mn(x) {
     }
     min_query_min_update_node(min_query_min_update_node a, min_query_min_update_node b)
-        : mn(min(a.mn, b.mn)), lazy(0) {
+        : lazy(1e16), mn(min(a.mn, b.mn)) {
     }
     bool islazy() const {
-        return lazy != 0;
+        return lazy != 1e16;
     }
     void apply(U x) {
         mn = min(mn, x);
-        lazy = min(mn, x);
+        lazy = min(lazy, x);
     }
-    void update_child(min_query_add_update_node& u) const {
+    void update_child(min_query_min_update_node& u) const {
         u.apply(lazy);
     }
     void unlazy() {
-        lazy = 0;
+        lazy = 1e16;
     }
 };
 
@@ -91,6 +126,11 @@ class lazy_segtree {
             }
         };
         build(1, 0, n - 1);
+    }
+
+    template <typename X>
+    lazy_segtree(vector<X> y)
+        : lazy_segtree(y.begin(), y.end()) {
     }
 
     void update(int l, int r, U v) {
@@ -136,7 +176,7 @@ class lazy_segtree {
 
 int main() {
     auto v = vector<long long>{0, 1, 2, 3, 4};
-    lazy_segtree<min_query_add_update_node<long long>, long long> t(v.begin(), v.end());
+    lazy_segtree<min_query_add_update_node<long long>, long long> t(v);
     assert(t.query(0, 1).mn == 0);
     t.update(0, 2, 1e10);
     cout << t.query(0, 1).mn << "\n";
